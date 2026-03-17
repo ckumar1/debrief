@@ -12,11 +12,16 @@ const FILTERS = ['ALL', 'TODAY', 'TOMORROW', 'THIS WEEK', 'UPCOMING', 'FUTURE'];
 
 export default function Tasks({ tasks = [], onToggle }) {
   const [activeFilter, setActiveFilter] = useState('ALL');
+  const [activeOwner, setActiveOwner] = useState('ALL');
   const [expandedId, setExpandedId] = useState(null);
 
-  const filtered = activeFilter === 'ALL'
-    ? tasks
-    : tasks.filter((t) => t.priority === activeFilter);
+  const owners = [...new Set(tasks.map((t) => t.owner).filter(Boolean))].sort();
+
+  const filtered = tasks.filter((t) => {
+    if (activeFilter !== 'ALL' && t.priority !== activeFilter) return false;
+    if (activeOwner !== 'ALL' && t.owner !== activeOwner) return false;
+    return true;
+  });
 
   if (!tasks.length) {
     return (
@@ -50,6 +55,31 @@ export default function Tasks({ tasks = [], onToggle }) {
           </button>
         ))}
       </div>
+
+      {/* Owner filter */}
+      {owners.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+          {['ALL', ...owners].map((o) => (
+            <button
+              key={o}
+              onClick={() => setActiveOwner(o)}
+              style={{
+                background: activeOwner === o ? '#8b5cf6' : '#0d1117',
+                color: activeOwner === o ? '#fff' : '#94a3b8',
+                border: '1px solid ' + (activeOwner === o ? '#8b5cf6' : '#1a2030'),
+                borderRadius: 6,
+                padding: '4px 10px',
+                fontSize: 11,
+                fontFamily: 'IBM Plex Mono',
+                cursor: 'pointer',
+                fontWeight: activeOwner === o ? 700 : 400,
+              }}
+            >
+              {o}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Task list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

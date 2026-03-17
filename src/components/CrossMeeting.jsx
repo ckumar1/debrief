@@ -154,10 +154,12 @@ function Section({ title, defaultExpanded = true, children }) {
 
 export default function CrossMeeting({ meetings }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [taskOwnerFilter, setTaskOwnerFilter] = useState('ALL');
 
   if (!meetings || meetings.length < 2) return null;
 
   const openTasks = getOpenTasks(meetings);
+  const taskOwners = [...new Set(openTasks.map((t) => t.owner).filter(Boolean))].sort();
   const decisions = getAllDecisions(meetings);
   const activeProjects = getActiveProjects(meetings);
   const searchResults = searchQuery.trim() ? searchAll(meetings, searchQuery) : null;
@@ -165,18 +167,43 @@ export default function CrossMeeting({ meetings }) {
   return (
     <div style={styles.container}>
       <Section title="Open Tasks">
+        {taskOwners.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+            {['ALL', ...taskOwners].map((o) => (
+              <button
+                key={o}
+                onClick={() => setTaskOwnerFilter(o)}
+                style={{
+                  background: taskOwnerFilter === o ? '#8b5cf6' : '#07090f',
+                  color: taskOwnerFilter === o ? '#fff' : '#94a3b8',
+                  border: '1px solid ' + (taskOwnerFilter === o ? '#8b5cf6' : '#1a2030'),
+                  borderRadius: 6,
+                  padding: '3px 8px',
+                  fontSize: 11,
+                  fontFamily: 'IBM Plex Mono, monospace',
+                  cursor: 'pointer',
+                  fontWeight: taskOwnerFilter === o ? 700 : 400,
+                }}
+              >
+                {o}
+              </button>
+            ))}
+          </div>
+        )}
         {openTasks.length === 0 ? (
           <div style={styles.empty}>No open tasks</div>
         ) : (
-          openTasks.map((task, i) => (
-            <div key={i} style={styles.taskRow}>
-              <span style={styles.priorityBadge}>
-                {priorityLabels[task.priority] || 'P2'}
-              </span>
-              {task.owner && <span style={styles.owner}>{task.owner}</span>}
-              <span style={styles.taskTitle}>{task.title}</span>
-            </div>
-          ))
+          openTasks
+            .filter((task) => taskOwnerFilter === 'ALL' || task.owner === taskOwnerFilter)
+            .map((task, i) => (
+              <div key={i} style={styles.taskRow}>
+                <span style={styles.priorityBadge}>
+                  {priorityLabels[task.priority] || 'P2'}
+                </span>
+                {task.owner && <span style={styles.owner}>{task.owner}</span>}
+                <span style={styles.taskTitle}>{task.title}</span>
+              </div>
+            ))
         )}
       </Section>
 
